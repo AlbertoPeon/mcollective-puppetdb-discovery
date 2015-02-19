@@ -46,6 +46,7 @@ module MCollective
         require 'rubygems'
         require 'httpi'
         require 'curb'
+        @config[:host] = deref_url(@config[:host])
         req = HTTPI::Request.new()
         req.auth.ssl.verify_mode = :none
         req.auth.gssnegotiate
@@ -53,6 +54,16 @@ module MCollective
         req
       end
 
+      def deref_url(url)
+        require 'socket'
+        begin
+          response = Socket.gethostbyname(url)
+          Socket.gethostbyaddr(response[rand(response.size - 3) + 3])[0]
+        rescue SocketError
+          # We return the same URL in case it can't be dereferenced
+          url
+        end
+      end
       # Configure the http object to use SSL.
       # To use SSL the client configuation options use_ssl,
       # ssl_ca, ssl_cert and ssl_private_key have to be set.
